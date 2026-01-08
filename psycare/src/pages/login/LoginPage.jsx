@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 
 export const LoginPage = () => {
   const [isRegister, setIsRegister] = useState(false);
-  const [role, setRole] = useState("pacient");
+  const [role, setRole] = useState("patient");
   const navigate = useNavigate();
 
   // common fields
@@ -20,15 +20,14 @@ export const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [location, setLocation] = useState("");
 
-  // pacient-only fields
+  // patient-only fields
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [faculty, setFaculty] = useState("");
-  const [problem, setProblem] = useState("");
+  const [issueDescription, setIssueDescription] = useState("");
   const [age, setAge] = useState("");
 
   // LOGIN
   const handleLogin = async () => {
-    const res = await fetch("http://localhost:5075/Users/login", {
+    const res = await fetch("http://localhost:5075/Auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -45,7 +44,7 @@ export const LoginPage = () => {
     localStorage.setItem("currentUser", JSON.stringify(user));
 
     // redirect pe pagina corectă
-    if (user.role === "pacient") navigate("/pacient");
+    if (user.role === "patient") navigate("/patient");
     else navigate("/psychologist");
   };
 
@@ -54,20 +53,19 @@ export const LoginPage = () => {
     let url = "";
     let body = {};
 
-    if (role === "pacient") {
-      url = "http://localhost:5075/Users/add-pacient";
+    if (role === "patient") {
+      url = "http://localhost:5075/Patients/add-patient";
       body = {
         name,
         email,
         password,
         phoneNumber,
-        faculty,
         location,
-        problem,
+        issueDescription,
         age: Number(age),
       };
     } else {
-      url = "http://localhost:5075/Users/add-psychologist";
+      url = "http://localhost:5075/Psychologists/add-psychologist";
       body = {
         name,
         email,
@@ -94,7 +92,7 @@ export const LoginPage = () => {
     localStorage.setItem("currentUser", JSON.stringify(user));
 
     // redirect direct la pagina corespunzătoare
-    if (role === "pacient") navigate("/pacient");
+    if (role === "patient") navigate("/patient");
     else navigate("/psychologist");
   };
 
@@ -111,7 +109,7 @@ export const LoginPage = () => {
               value={role}
               onChange={(e) => setRole(e.target.value)}
             >
-              <option value="pacient">Pacient</option>
+              <option value="patient">Patient</option>
               <option value="psychologist">Psychologist</option>
             </Select>
 
@@ -132,24 +130,20 @@ export const LoginPage = () => {
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        {/* Pacient extra */}
-        {isRegister && role === "pacient" && (
+        {/* Patient extra */}
+        {isRegister && role === "patient" && (
           <>
             <StyledInput
               placeholder="Phone Number"
               onChange={(e) => setPhoneNumber(e.target.value)}
             />
             <StyledInput
-              placeholder="Faculty"
-              onChange={(e) => setFaculty(e.target.value)}
-            />
-            <StyledInput
               placeholder="Location"
               onChange={(e) => setLocation(e.target.value)}
             />
             <StyledInput
-              placeholder="Problem"
-              onChange={(e) => setProblem(e.target.value)}
+              placeholder="Issue Description"
+              onChange={(e) => setIssueDescription(e.target.value)}
             />
             <StyledInput
               type="number"
