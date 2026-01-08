@@ -39,6 +39,29 @@ export const PsychologistPage = () => {
     }
   };
 
+  // WebSocket for crisis alerts
+  useEffect(() => {
+    const ws = new WebSocket(
+      `ws://localhost:5075/ws?psychologistId=${user.data.id}`
+    );
+
+    ws.onmessage = (event) => {
+      const message = event.data;
+      toast({
+        title: "Crisis Alert!",
+        description: message,
+        status: "error",
+        duration: 20000,
+        isClosable: true,
+      });
+    };
+
+    ws.onclose = () => console.log("WebSocket closed");
+    ws.onerror = (err) => console.error("WebSocket error", err);
+
+    return () => ws.close();
+  }, [user.data.id, toast]);
+
   const handleDeletePatient = async (patientId) => {
     try {
       const response = await fetch(

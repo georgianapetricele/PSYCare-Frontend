@@ -316,7 +316,7 @@ export const ChartSvg = styled.svg`
 export const ChartLine = styled.line`
   stroke: #d0d7e5;
   stroke-width: 1;
-`; 
+`;
 
 export const ChartPath = styled.path`
   fill: none;
@@ -324,17 +324,58 @@ export const ChartPath = styled.path`
   stroke-width: 3;
   stroke-linejoin: round;
   stroke-linecap: round;
-`; 
+`;
 
 export const ChartDot = styled.circle`
   fill: #6b46c1;
   stroke: #fff;
   stroke-width: 2;
   r: 6;
-`; 
+`;
 
 export const ChartDotLabel = styled(Text)`
   font-size: 11px;
   color: #4a5568;
   text-anchor: middle;
+`;
+
+export const CrisisButton = styled(Button)`
+  background-color: #ff1a1a;
+  color: white;
+  border-radius: 10px;
+  padding: 0 28px;
+  height: 56px;
+  font-weight: 700;
+  font-size: 18px;
+  display: block;
+  margin: 0 auto; /* centrare */
+  margin-top: 12px;
+  margin-bottom: 12px;
+  max-width: 320px;
+  width: 100%;
+
+  &:hover {
+    background-color: #e60000;
+  }
+
+  &:active {
+    background-color: #cc0000;
+    transform: scale(0.98);
+  }
+
+  &:disabled {
+    background-color: #a0aec0;
+    cursor: not-allowed;
+  }
+`;
+
+export const CrisisNote = styled(Text)`
+  text-align: center;
+  color: #e53e3e;
+  font-size: 14px;
+  margin-top: 4px;
+  max-width: 360px;
+  margin-left: auto;
+  margin-right: auto;
+  font-weight: 500;
 `;

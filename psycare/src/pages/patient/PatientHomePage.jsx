@@ -58,6 +58,8 @@ import {
   ChartDot,
   ChartDotLabel,
   ChartBarLabel,
+  CrisisButton,
+  CrisisNote,
 } from "./StyledComponents";
 
 export const PatientPage = () => {
@@ -73,6 +75,7 @@ export const PatientPage = () => {
   const [moodEntries, setMoodEntries] = useState([]);
   const [editingEntry, setEditingEntry] = useState(null);
   const [loadingMoods, setLoadingMoods] = useState(false);
+  const [crisisActive, setCrisisActive] = useState(false);
   const user = JSON.parse(localStorage.getItem("currentUser"));
   const toast = useToast();
 
@@ -401,6 +404,49 @@ export const PatientPage = () => {
     return { points, path, gridY, width, height, padX, padY };
   }, [chartData]);
 
+  const handleCrisis = async () => {
+    try {
+      if (!user.data.psychologistId) {
+        toast({
+          title: "No psychologist assigned",
+          description: "Please select a psychologist first.",
+          status: "warning",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      const response = await fetch(
+        `http://localhost:5075/Crisis/crisis/${user.data.id}`,
+        {
+          method: "POST",
+        }
+      );
+
+      if (response.ok) {
+        toast({
+          title: "Crisis alert sent!",
+          description: "Your psychologist has been notified.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+        setCrisisActive(true);
+      } else {
+        throw new Error("Failed to send crisis alert");
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+
   return (
     <PageContainer maxW="container.lg">
       <VStack spacing={6} align="stretch">
@@ -496,7 +542,8 @@ export const PatientPage = () => {
               <StatLabel>Average mood</StatLabel>
               <StatValue>{moodStats.avg ?? "—"}</StatValue>
               <StatHelper>
-                Across {moodStats.total} {moodStats.total === 1 ? "entry" : "entries"}
+                Across {moodStats.total}{" "}
+                {moodStats.total === 1 ? "entry" : "entries"}
               </StatHelper>
             </StatCard>
             <StatCard>
@@ -513,7 +560,9 @@ export const PatientPage = () => {
                 {moodStats.last?.emoji ? ` ${moodStats.last.emoji}` : ""}
               </StatValue>
               <StatHelper>
-                {moodStats.last ? formatDate(moodStats.last.createdAt) : "No entries yet"}
+                {moodStats.last
+                  ? formatDate(moodStats.last.createdAt)
+                  : "No entries yet"}
               </StatHelper>
             </StatCard>
           </MoodStatsGrid>
@@ -524,7 +573,9 @@ export const PatientPage = () => {
               <EmptyMessage>No data to chart yet.</EmptyMessage>
             ) : (
               <Box>
-                <ChartSvg viewBox={`0 0 ${chartPoints.width} ${chartPoints.height}`}>
+                <ChartSvg
+                  viewBox={`0 0 ${chartPoints.width} ${chartPoints.height}`}
+                >
                   {chartPoints.gridY.map((g, idx) => (
                     <ChartLine
                       key={`grid-${idx}`}
@@ -541,7 +592,11 @@ export const PatientPage = () => {
                       <ChartDotLabel as="text" x={p.x} y={p.y - 12}>
                         {p.value}
                       </ChartDotLabel>
-                      <ChartBarLabel as="text" x={p.x} y={chartPoints.height - 6}>
+                      <ChartBarLabel
+                        as="text"
+                        x={p.x}
+                        y={chartPoints.height - 6}
+                      >
                         {p.label}
                       </ChartBarLabel>
                     </g>
@@ -564,7 +619,12 @@ export const PatientPage = () => {
                   <HStack align="center" justify="space-between">
                     <MoodScore>{entry.score}</MoodScore>
                     <Box flex="1">
-                      <HStack justify="space-between" align="center" flexWrap="wrap" gap={2}>
+                      <HStack
+                        justify="space-between"
+                        align="center"
+                        flexWrap="wrap"
+                        gap={2}
+                      >
                         <MoodMeta>
                           {formatDate(entry.createdAt)}
                           {entry.emoji && <EmojiTag>{entry.emoji}</EmojiTag>}
@@ -697,6 +757,19 @@ export const PatientPage = () => {
             </ModalBody>
           </ModalContent>
         </Modal>
+      )}
+
+      {user.data.psychologistId && (
+        <InfoSection>
+          <CrisisButton disabled={crisisActive} onClick={handleCrisis}>
+            {crisisActive ? "🚨 Alert sent" : "🚨 CRISIS"}
+          </CrisisButton>
+
+          <CrisisNote>
+            Your psychologist will be notified immediately and will call you as
+            soon as possible.
+          </CrisisNote>
+        </InfoSection>
       )}
     </PageContainer>
   );
