@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LoginPage } from "./pages/login/LoginPage";
-import { PacientPage } from "./pages/pacient/PacientHomePage";
+import { PatientPage } from "./pages/patient/PatientHomePage";
 import { PsychologistPage } from "./pages/psychologist/PsychologistHomePage";
 
 function App() {
@@ -8,7 +8,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<LoginPage />} />
-        <Route path="/pacient" element={<PacientPage />} />
+        <Route path="/patient" element={<PatientPage />} />
         <Route path="/psychologist" element={<PsychologistPage />} />
       </Routes>
     </BrowserRouter>
