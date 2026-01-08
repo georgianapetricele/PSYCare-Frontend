@@ -147,3 +147,30 @@ export const SecondaryButton = styled(ModalButton)`
     background-color: #cbd5e0;
   }
 `;
+
+export const CrisisButton = styled(Button)`
+  background-color: #ff1a1a; /* roșu intens */
+  color: white;
+  border-radius: 8px;
+  padding: 0 20px;
+  height: 44px;
+  font-weight: 600;
+  font-size: 16px;
+  box-shadow: 0 0 0 0 rgba(255, 50, 50, 0.3);
+  transition: box-shadow 0.2s, transform 0.1s, background-color 0.2s;
+
+  &:hover {
+    background-color: #e60000;
+    box-shadow: 0 0 12px 2px rgba(255, 0, 0, 0.35);
+  }
+
+  &:active {
+    background-color: #cc0000;
+    transform: scale(0.97);
+  }
+
+  &:disabled {
+    background-color: #a0aec0;
+    cursor: not-allowed;
+  }
+`;
