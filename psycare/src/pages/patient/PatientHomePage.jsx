@@ -91,6 +91,11 @@ export const PatientPage = () => {
   const [sessionTime, setSessionTime] = useState("");
   const [sessionNotes, setSessionNotes] = useState("");
   const [loadingSessions, setLoadingSessions] = useState(false);
+  const [journals, setJournals] = useState([]);
+  const [loadingJournals, setLoadingJournals] = useState(false);
+  const [editingJournal, setEditingJournal] = useState(null);
+  const [journalText, setJournalText] = useState("");
+  const [isJournalModalOpen, setIsJournalModalOpen] = useState(false);
 
   const emojiOptions = [
     { value: "😞", label: "Low" },
@@ -105,6 +110,7 @@ export const PatientPage = () => {
     fetchPsychologists();
     fetchMoodEntries();
     fetchSessions();
+    fetchJournals();
   }, []);
 
   const fetchPsychologists = async () => {
@@ -462,15 +468,15 @@ export const PatientPage = () => {
   };
 
   const fetchSessions = async () => {
-  try {
-    setLoadingSessions(true);
-    const response = await fetch(
-      `http://localhost:5075/Sessions/patient/${user.data.id}`
-    );
-    if (response.ok) {
-      const data = await response.json();
-      setSessions(data);
-    }
+    try {
+      setLoadingSessions(true);
+      const response = await fetch(
+        `http://localhost:5075/Sessions/patient/${user.data.id}`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setSessions(data);
+      }
     } catch (error) {
       console.error("Error fetching sessions:", error);
       toast({
@@ -516,7 +522,7 @@ export const PatientPage = () => {
       psychologistId: 1, // Placeholder, to be replaced with corresponding psychologist ID  (user.data.psychologistId)
       scheduledAt: scheduledDateTime.toISOString(),
       notes: sessionNotes.trim() || null,
-      status: "pending"
+      status: "pending",
     };
 
     try {
@@ -588,22 +594,28 @@ export const PatientPage = () => {
     });
   };
 
-  const generateGoogleCalendarUrl = (session, patientName, psychologistEmail) => {
+  const generateGoogleCalendarUrl = (
+    session,
+    patientName,
+    psychologistEmail
+  ) => {
     const startDate = new Date(session.scheduledAt);
     const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // 1 hour session
-    
+
     // Format dates to Google Calendar format (YYYYMMDDTHHMMSSZ)
     const formatDateForGoogle = (date) => {
-      return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      return date.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
     };
 
     const params = new URLSearchParams({
-      action: 'TEMPLATE',
+      action: "TEMPLATE",
       text: `Therapy Session with ${psychologistEmail}`,
-      dates: `${formatDateForGoogle(startDate)}/${formatDateForGoogle(endDate)}`,
-      details: session.notes ? `Notes: ${session.notes}` : 'Therapy session',
-      location: 'Online/Video Call', // Customize as needed
-      trp: 'false' // Don't show suggestions
+      dates: `${formatDateForGoogle(startDate)}/${formatDateForGoogle(
+        endDate
+      )}`,
+      details: session.notes ? `Notes: ${session.notes}` : "Therapy session",
+      location: "Online/Video Call", // Customize as needed
+      trp: "false", // Don't show suggestions
     });
 
     return `https://calendar.google.com/calendar/render?${params.toString()}`;
@@ -611,11 +623,115 @@ export const PatientPage = () => {
 
   const handleAddToCalendar = (session) => {
     const calendarUrl = generateGoogleCalendarUrl(
-      session, 
-      user.data.name, 
+      session,
+      user.data.name,
       user.data.psychologistEmail
     );
-    window.open(calendarUrl, '_blank');
+    window.open(calendarUrl, "_blank");
+  };
+
+  // journal functionalities
+  const fetchJournals = async () => {
+    try {
+      setLoadingJournals(true);
+      const response = await fetch(
+        `http://localhost:5075/Patients/${user.data.id}/journals`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setJournals(data);
+      }
+    } catch (error) {
+      toast({
+        title: "Error loading journals",
+        status: "error",
+        description: error.message,
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setLoadingJournals(false);
+    }
+  };
+
+  const handleOpenJournalModal = (entry = null) => {
+    if (entry) {
+      setEditingJournal(entry);
+      setJournalText(entry.text || "");
+    } else {
+      setEditingJournal(null);
+      setJournalText("");
+    }
+    setIsJournalModalOpen(true);
+  };
+
+  const handleCloseJournalModal = () => {
+    setEditingJournal(null);
+    setJournalText("");
+    setIsJournalModalOpen(false);
+  };
+
+  const handleSubmitJournal = async () => {
+    const payload = { text: journalText.trim() || null };
+
+    try {
+      const url = editingJournal
+        ? `http://localhost:5075/Patients/${user.data.id}/journals/${editingJournal.id}`
+        : `http://localhost:5075/Patients/${user.data.id}/journals`;
+
+      const method = editingJournal ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) throw new Error("Failed to save journal entry");
+
+      toast({
+        title: editingJournal ? "Journal updated" : "Journal saved",
+        status: "success",
+        duration: 2500,
+        isClosable: true,
+      });
+
+      handleCloseJournalModal();
+      fetchJournals();
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: err.message,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleDeleteJournal = async (id) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5075/Patients/${user.data.id}/journal/${id}`,
+        { method: "DELETE" }
+      );
+      if (!response.ok) throw new Error();
+
+      toast({
+        title: "Entry deleted",
+        status: "info",
+        duration: 2000,
+        isClosable: true,
+      });
+      fetchJournals();
+    } catch {
+      toast({
+        title: "Error deleting entry",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   return (
@@ -713,7 +829,8 @@ export const PatientPage = () => {
                 <EmptyMessage>Loading sessions...</EmptyMessage>
               ) : sessions.length === 0 ? (
                 <EmptyMessage>
-                  No sessions scheduled yet. Click "Schedule session" to request a time with your psychologist.
+                  No sessions scheduled yet. Click "Schedule session" to request
+                  a time with your psychologist.
                 </EmptyMessage>
               ) : (
                 sessions.map((session) => (
@@ -723,7 +840,8 @@ export const PatientPage = () => {
                         {formatSessionDateTime(session.scheduledAt)}
                       </SessionDate>
                       <SessionStatus data-status={session.status}>
-                        {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
+                        {session.status.charAt(0).toUpperCase() +
+                          session.status.slice(1)}
                       </SessionStatus>
                     </SessionHeader>
                     {session.notes && (
@@ -1018,7 +1136,7 @@ export const PatientPage = () => {
                     type="date"
                     value={sessionDate}
                     onChange={(e) => setSessionDate(e.target.value)}
-                    min={new Date().toISOString().split('T')[0]}
+                    min={new Date().toISOString().split("T")[0]}
                   />
                 </FormControl>
 
@@ -1054,6 +1172,79 @@ export const PatientPage = () => {
                     onClick={handleScheduleSession}
                   >
                     Request session
+                  </Button>
+                </HStack>
+              </VStack>
+            </ModalBody>
+          </ModalContent>
+        </Modal>
+      )}
+
+      {/* Journal entries */}
+      <InfoSection>
+        <SectionHeader>
+          <SectionTitle>Journal</SectionTitle>
+          <SecondaryTextButton onClick={() => handleOpenJournalModal()}>
+            Add entry
+          </SecondaryTextButton>
+        </SectionHeader>
+
+        {loadingJournals ? (
+          <EmptyMessage>Loading journals...</EmptyMessage>
+        ) : journals.length === 0 ? (
+          <EmptyMessage>No journal entries yet.</EmptyMessage>
+        ) : (
+          <MoodEntries>
+            {journals.map((entry) => (
+              <MoodCard key={entry.id}>
+                <HStack justify="space-between" align="center">
+                  <MoodMeta>{formatDate(entry.createdAt)}</MoodMeta>
+                  <HStack>
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      onClick={() => handleOpenJournalModal(entry)}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      size="xs"
+                      colorScheme="red"
+                      variant="ghost"
+                      onClick={() => handleDeleteJournal(entry.id)}
+                    >
+                      Delete
+                    </Button>
+                  </HStack>
+                </HStack>
+                {entry.text && <MoodNote>{entry.text}</MoodNote>}
+              </MoodCard>
+            ))}
+          </MoodEntries>
+        )}
+      </InfoSection>
+
+      {/* Journal Modal */}
+      {isJournalModalOpen && (
+        <Modal isOpen onClose={handleCloseJournalModal} size="lg" isCentered>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Journal Entry</ModalHeader>
+            <ModalCloseButton onClick={handleCloseJournalModal} />
+            <ModalBody pb={6}>
+              <VStack spacing={4}>
+                <Textarea
+                  value={journalText}
+                  onChange={(e) => setJournalText(e.target.value)}
+                  placeholder="Write your thoughts..."
+                  minH="180px"
+                />
+                <HStack justify="flex-end">
+                  <Button variant="outline" onClick={handleCloseJournalModal}>
+                    Cancel
+                  </Button>
+                  <Button colorScheme="purple" onClick={handleSubmitJournal}>
+                    Save
                   </Button>
                 </HStack>
               </VStack>
