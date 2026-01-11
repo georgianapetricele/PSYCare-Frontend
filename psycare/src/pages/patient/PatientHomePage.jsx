@@ -60,6 +60,13 @@ import {
   ChartBarLabel,
   CrisisButton,
   CrisisNote,
+  SessionsSection,
+  SessionCard,
+  SessionHeader,
+  SessionDate,
+  SessionStatus,
+  SessionDetails,
+  CalendarButton,
 } from "./StyledComponents";
 
 export const PatientPage = () => {
@@ -78,6 +85,12 @@ export const PatientPage = () => {
   const [crisisActive, setCrisisActive] = useState(false);
   const user = JSON.parse(localStorage.getItem("currentUser"));
   const toast = useToast();
+  const [sessions, setSessions] = useState([]);
+  const [isSessionModalOpen, setIsSessionModalOpen] = useState(false);
+  const [sessionDate, setSessionDate] = useState("");
+  const [sessionTime, setSessionTime] = useState("");
+  const [sessionNotes, setSessionNotes] = useState("");
+  const [loadingSessions, setLoadingSessions] = useState(false);
 
   const emojiOptions = [
     { value: "😞", label: "Low" },
@@ -91,6 +104,7 @@ export const PatientPage = () => {
   useEffect(() => {
     fetchPsychologists();
     fetchMoodEntries();
+    fetchSessions();
   }, []);
 
   const fetchPsychologists = async () => {
@@ -447,6 +461,163 @@ export const PatientPage = () => {
     }
   };
 
+  const fetchSessions = async () => {
+  try {
+    setLoadingSessions(true);
+    const response = await fetch(
+      `http://localhost:5075/Sessions/patient/${user.data.id}`
+    );
+    if (response.ok) {
+      const data = await response.json();
+      setSessions(data);
+    }
+    } catch (error) {
+      console.error("Error fetching sessions:", error);
+      toast({
+        title: "Error loading sessions",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setLoadingSessions(false);
+    }
+  };
+
+  const handleOpenSessionModal = () => {
+    setSessionDate("");
+    setSessionTime("");
+    setSessionNotes("");
+    setIsSessionModalOpen(true);
+  };
+
+  const handleCloseSessionModal = () => {
+    setSessionDate("");
+    setSessionTime("");
+    setSessionNotes("");
+    setIsSessionModalOpen(false);
+  };
+
+  const handleScheduleSession = async () => {
+    if (!sessionDate || !sessionTime) {
+      toast({
+        title: "Please select date and time",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    const scheduledDateTime = new Date(`${sessionDate}T${sessionTime}`);
+
+    const payload = {
+      patientId: user.data.id,
+      psychologistId: 1, // Placeholder, to be replaced with corresponding psychologist ID  (user.data.psychologistId)
+      scheduledAt: scheduledDateTime.toISOString(),
+      notes: sessionNotes.trim() || null,
+      status: "pending"
+    };
+
+    try {
+      const response = await fetch("http://localhost:5075/Sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Session scheduled",
+          description: "Your psychologist will review and confirm the session.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+        handleCloseSessionModal();
+        fetchSessions();
+      } else {
+        throw new Error("Failed to schedule session");
+      }
+    } catch (error) {
+      console.error("Error scheduling session:", error);
+      toast({
+        title: "Error scheduling session",
+        description: error.message,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleCancelSession = async (sessionId) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5075/Sessions/${sessionId}/cancel`,
+        { method: "PUT" }
+      );
+
+      if (response.ok) {
+        toast({
+          title: "Session cancelled",
+          status: "info",
+          duration: 2000,
+          isClosable: true,
+        });
+        fetchSessions();
+      } else {
+        throw new Error("Failed to cancel session");
+      }
+    } catch (error) {
+      console.error("Error cancelling session:", error);
+      toast({
+        title: "Error cancelling session",
+        description: error.message,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const formatSessionDateTime = (isoString) => {
+    return new Date(isoString).toLocaleString(undefined, {
+      dateStyle: "full",
+      timeStyle: "short",
+    });
+  };
+
+  const generateGoogleCalendarUrl = (session, patientName, psychologistEmail) => {
+    const startDate = new Date(session.scheduledAt);
+    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // 1 hour session
+    
+    // Format dates to Google Calendar format (YYYYMMDDTHHMMSSZ)
+    const formatDateForGoogle = (date) => {
+      return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    };
+
+    const params = new URLSearchParams({
+      action: 'TEMPLATE',
+      text: `Therapy Session with ${psychologistEmail}`,
+      dates: `${formatDateForGoogle(startDate)}/${formatDateForGoogle(endDate)}`,
+      details: session.notes ? `Notes: ${session.notes}` : 'Therapy session',
+      location: 'Online/Video Call', // Customize as needed
+      trp: 'false' // Don't show suggestions
+    });
+
+    return `https://calendar.google.com/calendar/render?${params.toString()}`;
+  };
+
+  const handleAddToCalendar = (session) => {
+    const calendarUrl = generateGoogleCalendarUrl(
+      session, 
+      user.data.name, 
+      user.data.psychologistEmail
+    );
+    window.open(calendarUrl, '_blank');
+  };
+
   return (
     <PageContainer maxW="container.lg">
       <VStack spacing={6} align="stretch">
@@ -527,6 +698,73 @@ export const PatientPage = () => {
             </SelectButton>
           </SelectContainer>
         </InfoSection>
+
+        {user.data.psychologistId && (
+          <InfoSection>
+            <SectionHeader>
+              <SectionTitle>Your Sessions</SectionTitle>
+              <SecondaryTextButton onClick={handleOpenSessionModal}>
+                Schedule session
+              </SecondaryTextButton>
+            </SectionHeader>
+
+            <SessionsSection>
+              {loadingSessions ? (
+                <EmptyMessage>Loading sessions...</EmptyMessage>
+              ) : sessions.length === 0 ? (
+                <EmptyMessage>
+                  No sessions scheduled yet. Click "Schedule session" to request a time with your psychologist.
+                </EmptyMessage>
+              ) : (
+                sessions.map((session) => (
+                  <SessionCard key={session.id}>
+                    <SessionHeader>
+                      <SessionDate>
+                        {formatSessionDateTime(session.scheduledAt)}
+                      </SessionDate>
+                      <SessionStatus data-status={session.status}>
+                        {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
+                      </SessionStatus>
+                    </SessionHeader>
+                    {session.notes && (
+                      <SessionDetails>Notes: {session.notes}</SessionDetails>
+                    )}
+                    {session.status === "pending" && (
+                      <HStack mt={2}>
+                        <Button
+                          size="xs"
+                          variant="outline"
+                          onClick={() => handleOpenSessionModal(session)}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          size="xs"
+                          colorScheme="red"
+                          variant="ghost"
+                          onClick={() => handleCancelSession(session.id)}
+                        >
+                          Cancel
+                        </Button>
+                      </HStack>
+                    )}
+
+                    {session.status === "confirmed" && (
+                      <HStack mt={2}>
+                        <CalendarButton
+                          size="xs"
+                          onClick={() => handleAddToCalendar(session)}
+                        >
+                          📅 Add to Google Calendar
+                        </CalendarButton>
+                      </HStack>
+                    )}
+                  </SessionCard>
+                ))
+              )}
+            </SessionsSection>
+          </InfoSection>
+        )}
 
         {/* Mood Tracking Section */}
         <InfoSection>
@@ -751,6 +989,71 @@ export const PatientPage = () => {
                     onClick={handleSubmitMood}
                   >
                     Save entry
+                  </Button>
+                </HStack>
+              </VStack>
+            </ModalBody>
+          </ModalContent>
+        </Modal>
+      )}
+
+      {isSessionModalOpen && (
+        <Modal
+          isOpen={isSessionModalOpen}
+          onClose={handleCloseSessionModal}
+          size="lg"
+          closeOnEsc
+          closeOnOverlayClick
+          isCentered
+        >
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Schedule a session</ModalHeader>
+            <ModalCloseButton onClick={handleCloseSessionModal} />
+            <ModalBody pb={6}>
+              <VStack spacing={4} align="stretch">
+                <FormControl isRequired>
+                  <FormLabel>Date</FormLabel>
+                  <Input
+                    type="date"
+                    value={sessionDate}
+                    onChange={(e) => setSessionDate(e.target.value)}
+                    min={new Date().toISOString().split('T')[0]}
+                  />
+                </FormControl>
+
+                <FormControl isRequired>
+                  <FormLabel>Time</FormLabel>
+                  <Input
+                    type="time"
+                    value={sessionTime}
+                    onChange={(e) => setSessionTime(e.target.value)}
+                  />
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel>Notes (optional)</FormLabel>
+                  <Textarea
+                    value={sessionNotes}
+                    onChange={(e) => setSessionNotes(e.target.value)}
+                    placeholder="Any specific topics or concerns you'd like to discuss?"
+                  />
+                </FormControl>
+
+                <HStack pt={2} justify="flex-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCloseSessionModal}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    colorScheme="purple"
+                    onClick={handleScheduleSession}
+                  >
+                    Request session
                   </Button>
                 </HStack>
               </VStack>

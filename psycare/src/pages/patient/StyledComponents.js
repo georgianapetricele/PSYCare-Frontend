@@ -379,3 +379,75 @@ export const CrisisNote = styled(Text)`
   margin-right: auto;
   font-weight: 500;
 `;
+
+export const SessionsSection = styled(Box)`
+  margin-top: 24px;
+`;
+
+export const SessionCard = styled(Box)`
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 16px;
+  background: #fff;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+`;
+
+export const SessionHeader = styled(Box)`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+`;
+
+export const SessionDate = styled(Box)`
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 15px;
+`;
+
+export const SessionStatus = styled(Box)`
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  
+  &[data-status="pending"] {
+    background: #fef5e7;
+    color: #d97706;
+  }
+  
+  &[data-status="confirmed"] {
+    background: #d1fae5;
+    color: #059669;
+  }
+  
+  &[data-status="cancelled"] {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+`;
+
+export const SessionDetails = styled(Box)`
+  color: #4a5568;
+  font-size: 14px;
+  margin-bottom: 4px;
+`;
+
+export const CalendarButton = styled(Button)`
+  background-color: #4285f4;
+  color: white;
+  border-radius: 8px;
+  padding: 0 14px;
+  height: 36px;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  &:hover {
+    background-color: #3367d6;
+  }
+`;
