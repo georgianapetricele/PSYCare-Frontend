@@ -113,6 +113,19 @@ export const PatientPage = () => {
     fetchJournals();
   }, []);
 
+  useEffect(() => {
+    if (user.data.psychologistId) {
+      fetchSessions();
+      
+      // Fetch sessions every 10 minutes
+      const interval = setInterval(() => {
+        fetchSessions();
+      }, 60 * 1000); // 1 minute in milliseconds
+
+      return () => clearInterval(interval);
+    }
+  }, [user.data.psychologistId]);
+
   const fetchPsychologists = async () => {
     try {
       setLoadingPsychologists(true);
@@ -851,15 +864,7 @@ export const PatientPage = () => {
                       <HStack mt={2}>
                         <Button
                           size="xs"
-                          variant="outline"
-                          onClick={() => handleOpenSessionModal(session)}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          size="xs"
                           colorScheme="red"
-                          variant="ghost"
                           onClick={() => handleCancelSession(session.id)}
                         >
                           Cancel

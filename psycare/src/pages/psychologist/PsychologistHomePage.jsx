@@ -86,7 +86,7 @@ export const PsychologistPage = () => {
       // Fetch sessions every 10 minutes
       const interval = setInterval(() => {
         fetchSessions();
-      }, 10 * 60 * 1000); // 10 minutes in milliseconds
+      }, 60 * 1000); // 1 minute in milliseconds
 
       return () => clearInterval(interval);
     }, []);
