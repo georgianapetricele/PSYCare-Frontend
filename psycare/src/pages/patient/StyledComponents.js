@@ -59,10 +59,13 @@ export const PsychologistName = styled(Heading)`
   margin-bottom: 12px;
 `;
 
-export const PsychologistInfo = styled(Text)`
+export const PsychologistInfo = styled(Box)`
   color: rgba(255, 255, 255, 0.9);
   font-size: 14px;
   margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 
   &:last-child {
     margin-bottom: 0;
@@ -412,17 +415,17 @@ export const SessionStatus = styled(Box)`
   border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
-  
+
   &[data-status="pending"] {
     background: #fef5e7;
     color: #d97706;
   }
-  
+
   &[data-status="confirmed"] {
     background: #d1fae5;
     color: #059669;
   }
-  
+
   &[data-status="cancelled"] {
     background: #fee2e2;
     color: #dc2626;
