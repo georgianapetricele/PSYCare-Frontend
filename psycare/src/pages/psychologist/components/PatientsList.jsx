@@ -9,12 +9,11 @@ import {
   EmptyStateText,
 } from "../StyledComponents";
 
-export const PatientsList = ({ patients, loading, onDelete, onAddClick }) => {
+export const PatientsList = ({ patients, loading, onDelete }) => {
   return (
     <SectionBox>
       <SectionHeader>
         <SectionTitle>My Patients ({patients.length})</SectionTitle>
-        <AddButton onClick={onAddClick}>Add Patient</AddButton>
       </SectionHeader>
 
       {loading ? (

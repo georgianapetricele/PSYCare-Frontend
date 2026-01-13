@@ -22,7 +22,7 @@ import {
   SessionsGrid,
   EmptyStateText,
   LoadingText,
-  CalendarButton,  
+  CalendarButton,
 } from "./StyledComponents";
 
 export const PsychologistPage = () => {
@@ -44,7 +44,7 @@ export const PsychologistPage = () => {
       setLoading(true);
       // Replace with your actual API endpoint
       const response = await fetch(
-        `http://localhost:5075/Users/psychologist/${user.data.id}/patients`
+        `http://localhost:5075/Psychologists/get-patients/${user.data.id}`
       );
       if (response.ok) {
         const data = await response.json();
@@ -81,83 +81,17 @@ export const PsychologistPage = () => {
   }, [user.data.id, toast]);
 
   useEffect(() => {
+    fetchSessions();
+
+    // Fetch sessions every 10 minutes
+    const interval = setInterval(() => {
       fetchSessions();
-      
-      // Fetch sessions every 10 minutes
-      const interval = setInterval(() => {
-        fetchSessions();
-      }, 60 * 1000); // 1 minute in milliseconds
+    }, 60 * 1000); // 1 minute in milliseconds
 
-      return () => clearInterval(interval);
-    }, []);
+    return () => clearInterval(interval);
+  }, []);
 
-  const handleDeletePatient = async (patientId) => {
-    try {
-      const response = await fetch(
-        `http://localhost:5075/Users/patient/${patientId}`,
-        {
-          method: "DELETE",
-        }
-      );
-
-      if (response.ok) {
-        toast({
-          title: "Patient removed",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-        // Refresh the list
-        fetchPatients();
-      } else {
-        throw new Error("Failed to delete patient");
-      }
-    } catch (error) {
-      toast({
-        title: "Error deleting patient",
-        description: error.message,
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
-
-  const handleAddPatient = async (patientEmail) => {
-    try {
-      const response = await fetch(
-        `http://localhost:5075/Users/psychologist/${user.data.id}/add-patient`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: patientEmail }),
-        }
-      );
-
-      if (response.ok) {
-        toast({
-          title: "Patient added successfully",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-        onClose();
-        fetchPatients();
-      } else {
-        throw new Error("Failed to add patient");
-      }
-    } catch (error) {
-        toast({
-          title: "Error adding patient",
-          description: error.message,
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    };
-
-    const fetchSessions = async () => {
+  const fetchSessions = async () => {
     try {
       setLoadingSessions(true);
       const response = await fetch(
@@ -252,18 +186,20 @@ export const PsychologistPage = () => {
   const generateGoogleCalendarUrl = (session, patientName) => {
     const startDate = new Date(session.scheduledAt);
     const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
-    
+
     const formatDateForGoogle = (date) => {
-      return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      return date.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
     };
 
     const params = new URLSearchParams({
-      action: 'TEMPLATE',
+      action: "TEMPLATE",
       text: `Therapy Session with ${patientName}`,
-      dates: `${formatDateForGoogle(startDate)}/${formatDateForGoogle(endDate)}`,
-      details: session.notes ? `Notes: ${session.notes}` : 'Therapy session',
-      location: 'Online/Video Call',
-      trp: 'false'
+      dates: `${formatDateForGoogle(startDate)}/${formatDateForGoogle(
+        endDate
+      )}`,
+      details: session.notes ? `Notes: ${session.notes}` : "Therapy session",
+      location: "Online/Video Call",
+      trp: "false",
     });
 
     return `https://calendar.google.com/calendar/render?${params.toString()}`;
@@ -272,7 +208,7 @@ export const PsychologistPage = () => {
   // Add handler
   const handleAddToCalendar = (session, patientName) => {
     const calendarUrl = generateGoogleCalendarUrl(session, patientName);
-    window.open(calendarUrl, '_blank');
+    window.open(calendarUrl, "_blank");
   };
 
   return (
@@ -289,17 +225,9 @@ export const PsychologistPage = () => {
         <PatientsList
           patients={patients}
           loading={loading}
-          onDelete={handleDeletePatient}
           onAddClick={onOpen}
         />
       </VStack>
-
-      {/* Add Patient Modal */}
-      <AddPatientModal
-        isOpen={isOpen}
-        onClose={onClose}
-        onAdd={handleAddPatient}
-      />
 
       <SectionBox>
         <SectionHeader>
@@ -313,7 +241,7 @@ export const PsychologistPage = () => {
         ) : (
           <SessionsGrid>
             {sessions.map((session) => {
-              const patient = patients.find(p => p.id === session.patientId);
+              const patient = patients.find((p) => p.id === session.patientId);
               return (
                 <SessionRequestCard key={session.id}>
                   <SessionRequestHeader>
@@ -329,7 +257,8 @@ export const PsychologistPage = () => {
                       )}
                     </Box>
                     <SessionStatusBadge data-status={session.status}>
-                      {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
+                      {session.status.charAt(0).toUpperCase() +
+                        session.status.slice(1)}
                     </SessionStatusBadge>
                   </SessionRequestHeader>
 
@@ -339,10 +268,14 @@ export const PsychologistPage = () => {
 
                   {session.status === "pending" && (
                     <SessionActionButtons>
-                      <AcceptButton onClick={() => handleAcceptSession(session.id)}>
+                      <AcceptButton
+                        onClick={() => handleAcceptSession(session.id)}
+                      >
                         Accept
                       </AcceptButton>
-                      <RejectButton onClick={() => handleRejectSession(session.id)}>
+                      <RejectButton
+                        onClick={() => handleRejectSession(session.id)}
+                      >
                         Reject
                       </RejectButton>
                     </SessionActionButtons>
@@ -350,7 +283,14 @@ export const PsychologistPage = () => {
 
                   {session.status === "confirmed" && (
                     <SessionActionButtons>
-                      <CalendarButton onClick={() => handleAddToCalendar(session, patient?.name || "Patient")}>
+                      <CalendarButton
+                        onClick={() =>
+                          handleAddToCalendar(
+                            session,
+                            patient?.name || "Patient"
+                          )
+                        }
+                      >
                         📅 Add to Google Calendar
                       </CalendarButton>
                     </SessionActionButtons>

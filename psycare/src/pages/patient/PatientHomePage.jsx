@@ -68,6 +68,7 @@ import {
   SessionDetails,
   CalendarButton,
 } from "./StyledComponents";
+import { SelectPsychologistModal } from "./SelectPsychologistModal";
 
 export const PatientPage = () => {
   const [psychologists, setPsychologists] = useState([]);
@@ -96,6 +97,9 @@ export const PatientPage = () => {
   const [editingJournal, setEditingJournal] = useState(null);
   const [journalText, setJournalText] = useState("");
   const [isJournalModalOpen, setIsJournalModalOpen] = useState(false);
+  const [selectPsychologistModalOpen, setSelectPsychologistModalOpen] =
+    useState(false);
+  const [psychologistForPatient, setPsychologistForPatient] = useState(null);
 
   const emojiOptions = [
     { value: "😞", label: "Low" },
@@ -107,7 +111,7 @@ export const PatientPage = () => {
 
   // Fetch psychologists and mood entries on component mount
   useEffect(() => {
-    fetchPsychologists();
+    fetchPsychologistForPatient();
     fetchMoodEntries();
     fetchSessions();
     fetchJournals();
@@ -116,7 +120,7 @@ export const PatientPage = () => {
   useEffect(() => {
     if (user.data.psychologistId) {
       fetchSessions();
-      
+
       // Fetch sessions every 10 minutes
       const interval = setInterval(() => {
         fetchSessions();
@@ -126,26 +130,18 @@ export const PatientPage = () => {
     }
   }, [user.data.psychologistId]);
 
-  const fetchPsychologists = async () => {
+  const fetchPsychologistForPatient = async () => {
     try {
-      setLoadingPsychologists(true);
       const response = await fetch(
-        "http://localhost:5075/Users/all-psychologists"
+        `http://localhost:5075/Patients/${user.data.id}/get-psychologist`
       );
       if (response.ok) {
         const data = await response.json();
-        setPsychologists(data);
+        setPsychologistForPatient(data);
       }
     } catch (error) {
-      console.error("Error fetching psychologists:", error);
-      toast({
-        title: "Error loading psychologists",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setLoadingPsychologists(false);
+      console.error("Error fetching psychologist for patient:", error);
+      setPsychologistForPatient(null);
     }
   };
 
@@ -781,51 +777,27 @@ export const PatientPage = () => {
         </InfoSection>
 
         {/* Current Psychologist Section */}
-        {user.data.psychologistEmail ? (
-          <PsychologistCard>
-            <PsychologistName>Your Psychologist</PsychologistName>
-            <PsychologistInfo>
-              <InfoLabel>Email: </InfoLabel>
-              {user.data.psychologistEmail}
-            </PsychologistInfo>
-          </PsychologistCard>
-        ) : (
-          <InfoSection>
-            <SectionTitle>No Psychologist Assigned</SectionTitle>
-            <EmptyMessage>
-              You don't have a psychologist assigned yet. Please select one
-              below.
-            </EmptyMessage>
-          </InfoSection>
-        )}
-
-        {/* Select Psychologist Section */}
         <InfoSection>
-          <SectionTitle>Select a Psychologist</SectionTitle>
-          <SelectContainer>
-            <PsychologistSelect
-              value={selectedPsychologistEmail}
-              onChange={(e) => setSelectedPsychologistEmail(e.target.value)}
-              disabled={loadingPsychologists}
+          <SectionHeader>
+            <SectionTitle>My psychologist</SectionTitle>
+            <SecondaryTextButton
+              onClick={() => setSelectPsychologistModalOpen(true)}
             >
-              <option value="">
-                {loadingPsychologists
-                  ? "Loading..."
-                  : "Choose a psychologist..."}
-              </option>
-              {psychologists.map((psych) => (
-                <option key={psych.id} value={psych.email}>
-                  {psych.email}
-                </option>
-              ))}
-            </PsychologistSelect>
-            <SelectButton
-              onClick={handleSelectPsychologist}
-              isLoading={loadingPsychologists}
-            >
-              Assign
-            </SelectButton>
-          </SelectContainer>
+              {psychologistForPatient ? "Change" : "Select"}
+            </SecondaryTextButton>
+          </SectionHeader>
+
+          {psychologistForPatient?.email ? (
+            <PsychologistInfo>
+              <InfoLabel>Name: {psychologistForPatient.name}</InfoLabel>
+              <InfoLabel>Email: {psychologistForPatient.email}</InfoLabel>
+              <InfoLabel>Location: {psychologistForPatient.location}</InfoLabel>
+            </PsychologistInfo>
+          ) : (
+            <EmptyMessage>
+              You don't have a psychologist assigned yet.
+            </EmptyMessage>
+          )}
         </InfoSection>
 
         {user.data.psychologistId && (
@@ -1257,6 +1229,16 @@ export const PatientPage = () => {
           </ModalContent>
         </Modal>
       )}
+
+      <SelectPsychologistModal
+        isOpen={selectPsychologistModalOpen}
+        onClose={() => setSelectPsychologistModalOpen(false)}
+        patientId={user.data.id}
+        onAssigned={() => {
+          setSelectPsychologistModalOpen(false);
+          fetchPsychologistForPatient();
+        }}
+      />
 
       {user.data.psychologistId && (
         <InfoSection>
