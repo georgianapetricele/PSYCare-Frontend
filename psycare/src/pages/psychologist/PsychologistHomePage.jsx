@@ -25,6 +25,8 @@ import {
   CalendarButton,
 } from "./StyledComponents";
 
+import { InfoSection } from "../patient/StyledComponents";
+
 export const PsychologistPage = () => {
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,6 +43,7 @@ export const PsychologistPage = () => {
 
   const fetchPatients = async () => {
     try {
+      console.log("Psychologist id:", user.data.id);
       setLoading(true);
       // Replace with your actual API endpoint
       const response = await fetch(
@@ -211,24 +214,52 @@ export const PsychologistPage = () => {
     window.open(calendarUrl, "_blank");
   };
 
+  const handleDeletePatient = async (patientId) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5075/Patients/delete-patient/${patientId}`,
+        { method: "DELETE" }
+      );
+
+      if (response.ok) {
+        setPatients((prev) => prev.filter((p) => p.id !== patientId));
+        toast({
+          title: "Patient removed",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+        console.log("Psychologist id:", user.data.id);
+        await fetchPatients();
+      } else {
+        throw new Error("Failed to delete patient");
+      }
+    } catch (error) {
+      console.error("Error removing patient:", error);
+      toast({
+        title: "Error removing patient",
+        description: error.message,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   return (
     <PageContainer maxW="container.xl">
       <VStack spacing={6} align="stretch">
         {/* Header */}
         <HeaderBox>
           <WelcomeHeading>Welcome, Dr. {user.data.name}</WelcomeHeading>
-          <InfoText>Email: {user.data.email}</InfoText>
-          <InfoText>Location: {user.data.location}</InfoText>
         </HeaderBox>
-
-        {/* Patients Section */}
-        <PatientsList
-          patients={patients}
-          loading={loading}
-          onAddClick={onOpen}
-        />
       </VStack>
-
+      <PatientsList
+        patients={patients}
+        loading={loading}
+        onAddClick={onOpen}
+        onDelete={handleDeletePatient}
+      />
       <SectionBox>
         <SectionHeader>
           <SectionTitle>Session Requests</SectionTitle>

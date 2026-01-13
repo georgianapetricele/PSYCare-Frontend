@@ -168,63 +168,6 @@ export const PatientPage = () => {
     }
   };
 
-  const handleSelectPsychologist = async () => {
-    if (!selectedPsychologistEmail) {
-      toast({
-        title: "Please select a psychologist",
-        status: "warning",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `http://localhost:5075/Users/patient/${user.data.id}/assign-psychologist`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            psychologistEmail: selectedPsychologistEmail,
-          }),
-        }
-      );
-
-      if (response.ok) {
-        // Update the current user in localStorage
-        const updatedUser = {
-          ...user,
-          data: {
-            ...user.data,
-            psychologistEmail: selectedPsychologistEmail,
-          },
-        };
-        localStorage.setItem("currentUser", JSON.stringify(updatedUser));
-
-        toast({
-          title: "Psychologist assigned successfully",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-
-        setSelectedPsychologistEmail("");
-        window.location.reload(); // Refresh to update the display
-      } else {
-        throw new Error("Failed to assign psychologist");
-      }
-    } catch (error) {
-      toast({
-        title: "Error assigning psychologist",
-        description: error.message,
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
-
   const handleOpenMoodModal = (entry = null) => {
     if (entry) {
       setMoodValue(Number(entry.score) || 5);
@@ -1240,7 +1183,7 @@ export const PatientPage = () => {
         }}
       />
 
-      {user.data.psychologistId && (
+      {psychologistForPatient && (
         <InfoSection>
           <CrisisButton disabled={crisisActive} onClick={handleCrisis}>
             {crisisActive ? "🚨 Alert sent" : "🚨 CRISIS"}

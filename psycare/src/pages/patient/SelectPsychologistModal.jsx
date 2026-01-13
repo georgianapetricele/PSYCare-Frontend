@@ -112,7 +112,7 @@ export const SelectPsychologistModal = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} isCentered>
       <ModalOverlay />
-      <ModalContent>
+      <ModalContent width="500px" height="300px">
         <ModalHeader>Select Psychologist</ModalHeader>
         <ModalCloseButton />
 
