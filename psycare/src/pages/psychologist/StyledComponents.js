@@ -1,13 +1,33 @@
 import styled from "@emotion/styled";
-import { Box, Button, Container, Heading, Text, Input } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  Container,
+  Heading,
+  Text,
+  Input,
+  VStack,
+} from "@chakra-ui/react";
 
 export const PageContainer = styled(Container)`
   padding-top: 32px;
   padding-bottom: 32px;
 `;
 
+export const Col = styled(VStack)`
+  margin-bottom: 20px;
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  background-color: #f7fafc;
+  border-radius: 12px;
+  padding: 40px 60px;
+`;
+
 export const HeaderBox = styled(Box)`
-  margin-bottom: 24px;
+  margin-top: 50px;
+  display: flex;
+  justify-content: center;
 `;
 
 export const WelcomeHeading = styled(Heading)`
@@ -17,23 +37,27 @@ export const WelcomeHeading = styled(Heading)`
 `;
 
 export const InfoText = styled(Text)`
-  color: #718096;
-  font-size: 14px;
+  color: #060607;
+  font-size: 16px;
 `;
 
 export const SectionBox = styled(Box)`
-  margin-top: 24px;
+  margin-top: 50px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 `;
 
 export const SectionHeader = styled(Box)`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 `;
 
-export const SectionTitle = styled(Heading)`
-  font-size: 20px;
+export const SectionTitle = styled(Text)`
+  font-size: 25px;
+  font-weight: bold;
   color: #2d3748;
 `;
 
@@ -82,9 +106,10 @@ export const PatientName = styled(Text)`
 `;
 
 export const PatientDetailText = styled(Text)`
-  font-size: 14px;
-  color: #718096;
+  font-size: 16px;
+  color: #000000;
   margin-bottom: 4px;
+  font-weight: 600;
 `;
 
 export const DeleteButton = styled(Button)`
@@ -267,17 +292,17 @@ export const SessionStatusBadge = styled(Box)`
   border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
-  
+
   &[data-status="pending"] {
     background: #fef5e7;
     color: #d97706;
   }
-  
+
   &[data-status="confirmed"] {
     background: #d1fae5;
     color: #059669;
   }
-  
+
   &[data-status="cancelled"] {
     background: #fee2e2;
     color: #dc2626;

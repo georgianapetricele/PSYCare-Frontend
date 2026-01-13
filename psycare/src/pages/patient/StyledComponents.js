@@ -7,13 +7,16 @@ export const PageContainer = styled(Container)`
 `;
 
 export const HeaderBox = styled(Box)`
-  margin-bottom: 32px;
+  margin-top: 50px;
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: center;
 `;
 
 export const WelcomeHeading = styled(Heading)`
   font-size: 28px;
   color: #2d3748;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 `;
 
 export const InfoSection = styled(Box)`
@@ -24,8 +27,9 @@ export const InfoSection = styled(Box)`
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 `;
 
-export const SectionTitle = styled(Heading)`
-  font-size: 18px;
+export const SectionTitle = styled(Text)`
+  font-size: 25px;
+  font-weight: bold;
   color: #2d3748;
   margin-bottom: 16px;
 `;
@@ -256,8 +260,9 @@ export const MoodChart = styled(Box)`
   background: #f7fafc;
 `;
 
-export const ChartTitle = styled(Heading)`
-  font-size: 16px;
+export const ChartTitle = styled(Text)`
+  font-size: 25px;
+  font-weight: bold;
   color: #2d3748;
   margin-bottom: 10px;
 `;
@@ -453,4 +458,25 @@ export const CalendarButton = styled(Button)`
   &:hover {
     background-color: #3367d6;
   }
+`;
+
+export const EmptyStateText = styled(Text)`
+  color: #a0aec0;
+  font-style: italic;
+  padding: 20px;
+  text-align: center;
+`;
+
+export const LoadingText = styled(Text)`
+  color: #718096;
+  font-size: 16px;
+  margin-top: 12px;
+  text-align: center;
+`;
+
+export const SectionBox = styled(Box)`
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 `;
