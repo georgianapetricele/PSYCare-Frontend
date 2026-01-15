@@ -471,7 +471,7 @@ export const PatientPage = () => {
 
     const payload = {
       patientId: user.data.id,
-      psychologistId: 1, // Placeholder, to be replaced with corresponding psychologist ID  (user.data.psychologistId)
+      psychologistId: user.data.psychologistId,
       scheduledAt: scheduledDateTime.toISOString(),
       notes: sessionNotes.trim() || null,
       status: "pending",
