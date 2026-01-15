@@ -117,7 +117,7 @@ export const DeleteButton = styled(Button)`
   color: white;
   border-radius: 8px;
   padding: 0 16px;
-  height: 36px;
+  height: 40px;
   font-size: 14px;
 
   &:hover {
