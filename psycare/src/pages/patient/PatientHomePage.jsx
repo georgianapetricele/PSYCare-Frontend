@@ -145,6 +145,22 @@ export const PatientPage = () => {
     }
   };
 
+  const fetchPatient = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:5075/Patients/get-patient/${user.data.id}`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem("currentUser", JSON.stringify({ ...user, data }));
+        return data;
+      }
+    } catch (error) {
+      console.error("Error fetching patient:", error);
+      return null;
+    }
+  };
+
   const fetchMoodEntries = async () => {
     try {
       setLoadingMoods(true);
@@ -1178,8 +1194,9 @@ export const PatientPage = () => {
         onClose={() => setSelectPsychologistModalOpen(false)}
         patientId={user.data.id}
         onAssigned={() => {
-          setSelectPsychologistModalOpen(false);
           fetchPsychologistForPatient();
+          fetchPatient();
+          setSelectPsychologistModalOpen(false);
         }}
       />
 
